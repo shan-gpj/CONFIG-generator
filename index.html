@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shan Config Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+<style>
+body {
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+    color: #fff;
+    transition: 0.5s;
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    left: -250px;
+    top: 0;
+    width: 250px;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(10px);
+    transition: 0.5s;
+    padding-top: 60px;
+    z-index: 10;
+    box-shadow: 0 0 20px #00ffff;
+    border-right: 1px solid #0ff;
+}
+.sidebar.show { left: 0; }
+.sidebar a {
+    display: block;
+    padding: 15px 25px;
+    color: #00ffff;
+    text-decoration: none;
+    font-size: 16px;
+    transition: 0.3s;
+}
+.sidebar a:hover {
+    color: #ff00ff;
+    transform: translateX(5px);
+}
+.sidebar a i { margin-right: 12px; }
+
+/* Hamburger */
+.hamburger {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    cursor: pointer;
+    z-index: 20;
+}
+.hamburger div {
+    width: 35px;
+    height: 4px;
+    background: #00ffff;
+    margin: 6px 0;
+    border-radius: 2px;
+    transition: 0.3s;
+}
+
+/* Sections */
+section {
+    display: none;
+    padding: 100px 20px 20px 20px;
+    text-align: center;
+    transition: 0.5s;
+}
+section.active { display: block; }
+
+.card, .vip-card, .register-card {
+    background: rgba(0,0,0,0.7);
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 0 30px #00ffff;
+    max-width: 450px;
+    margin: 30px auto;
+    transition: 0.3s;
+}
+.card:hover, .vip-card:hover, .register-card:hover { box-shadow: 0 0 40px #ff00ff; }
+
+input, select {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 12px;
+    outline: none;
+    font-size: 14px;
+    background: rgba(255,255,255,0.05);
+    color: #0ff;
+}
+input:focus, select:focus { box-shadow: 0 0 10px #00ffff; }
+
+button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(45deg,#ff00ff,#00ffff);
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+button:hover { transform: scale(1.05); box-shadow: 0 0 20px #ff00ff; }
+
+.stats {
+    display: none;
+    justify-content: space-around;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #0ff;
+}
+
+#countdown {
+    margin: 10px 0;
+    font-size: 15px;
+    padding: 5px 10px;
+    border-radius: 12px;
+    background: rgba(0,255,255,0.1);
+    display: inline-block;
+}
+
+.file-item {
+    background: rgba(0,0,0,0.6);
+    margin: 12px auto;
+    padding: 15px;
+    border-radius: 12px;
+    max-width: 400px;
+    box-shadow: 0 0 15px #00ffff;
+    transition: 0.3s;
+}
+.file-item:hover { box-shadow: 0 0 25px #ff00ff; }
+.file-item button { margin: 5px 5px 0 0; }
+
+/* VIP card */
+.vip-card {
+    background: linear-gradient(135deg,#ff00ff,#00ffff);
+    padding: 25px;
+    border-radius: 20px;
+    color: black;
+    font-weight: bold;
+    box-shadow: 0 0 30px #ff00ff;
+    max-width: 400px;
+    margin: 30px auto;
+    text-align: center;
+}
+.vip-card img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px solid #0ff;
+    margin-bottom: 10px;
+}
+.vip-card button {
+    background: #000;
+    color: #00ffff;
+    width: 60%;
+}
+.vip-card button:hover { color: #ff00ff; }
+
+/* Popup */
+.popup {
+    position: fixed;
+    top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.85);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    display:none;
+    z-index:50;
+}
+.popup-content {
+    background: rgba(0,0,0,0.9);
+    padding:30px;
+    border-radius:20px;
+    max-width:400px;
+    text-align:center;
+    color:#0ff;
+    box-shadow:0 0 20px #ff00ff;
+}
+.popup-content img{
+    width:100px; border-radius:50%; margin-bottom:15px; border:2px solid #0ff;
+}
+.popup-content button{
+    margin-top:15px;
+    background:#ff00ff; color:#fff; width:50%;
+}
+
+</style>
+</head>
+<body>
+<!-- Hero Title -->
+<div class="hero-title">
+    <h1>SHAN CONFIG GENERATOR</h1>
+</div>
+
+<style>
+.hero-title {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+.hero-title h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 42px;
+    background: linear-gradient(90deg, #ff00ff, #00ffff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.6);
+    animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+    0% { text-shadow: 2px 2px 10px rgba(255,0,255,0.7), 0 0 20px rgba(0,255,255,0.7); }
+    50% { text-shadow: 2px 2px 15px rgba(255,0,255,0.9), 0 0 25px rgba(0,255,255,0.9); }
+    100% { text-shadow: 2px 2px 20px rgba(255,0,255,1), 0 0 30px rgba(0,255,255,1); }
+}
+</style>
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+<a href="#home"><i class="fa fa-home"></i> Home</a>
+<a href="#android"><i class="fa fa-android"></i> Android</a>
+<a href="#ios"><i class="fa fa-apple"></i> iOS</a>
+<a href="#files"><i class="fa fa-folder"></i> Config List</a>
+<a href="#vip"><i class="fa fa-gem"></i> VIP</a>
+</div>
+
+<div class="hamburger" onclick="toggleSidebar()"><div></div><div></div><div></div></div>
+
+<!-- HOME -->
+<section id="home" class="active">
+<div class="card" id="login-card">
+<h2>LOGIN</h2>
+<input type="text" id="login-username" placeholder="Username">
+<input type="password" id="login-password" placeholder="Password">
+<button onclick="login()">Login</button>
+<p>Or <span style="color:#0ff;cursor:pointer;" onclick="openSection('register')">Register</span></p>
+</div>
+</section>
+
+<!-- REGISTER -->
+<section id="register">
+<div class="register-card">
+<h2>REGISTER</h2>
+<input type="text" id="reg-username" placeholder="Username">
+<input type="password" id="reg-password" placeholder="Password">
+<input type="text" id="reg-name" placeholder="Full Name">
+<input type="text" id="reg-number" placeholder="Mobile Number">
+<button onclick="registerUser()">Register</button>
+<p>Already have account? <span style="color:#0ff;cursor:pointer;" onclick="openSection('home')">Login</span></p>
+</div>
+</section>
+
+<!-- ANDROID -->
+<section id="android">
+<h2>Android Generator</h2>
+<div id="countdown"></div>
+<div class="stats" id="stats">
+<div>Used: <span id="used">0</span></div>
+<div>Limit: <span id="limit">10</span></div>
+<div>Status: <span id="status">FREE</span></div>
+</div>
+<input id="android-num" type="number" placeholder="Number of configs"><br>
+<button onclick="generate('android')">Generate Config</button>
+<div id="android-log"></div>
+</section>
+
+<!-- IOS -->
+<section id="ios">
+<h2>iOS Generator</h2>
+<input id="ios-num" type="number" placeholder="Number of configs"><br>
+<button onclick="generate('ios')">Generate Config</button>
+<div id="ios-log"></div>
+</section>
+
+<!-- FILE LIST -->
+<section id="files">
+<h2>Generated Configs</h2>
+<div id="file-list"></div>
+</section>
+
+<!-- VIP Section -->
+<<!-- VIP Section -->
+<!-- VIP Section -->
+<section id="vip">
+    <div class="vip-card">
+        <h2>VIP AVAILABLE</h2>
+        <p>Upload your proof image to apply for VIP</p>
+        <button onclick="showVIPPopup()">Available</button>
+    </div>
+</section>
+
+<!-- VIP Popup -->
+<div id="vip-popup" class="popup">
+    <div class="popup-content">
+        <h2>VIP Submission</h2>
+        <p><b>Name:</b> <span id="vip-name"></span></p>
+        <p><b>Number:</b> <span id="vip-number"></span></p>
+        <h3>Upload an image for proof:</h3>
+        <input type="file" id="vip-upload" accept="image/*"><br>
+        <img id="vip-proof" src="" alt="Selected Proof" style="width:150px; border-radius:10px; margin-top:10px; border:2px solid #0ff;">
+        <br>
+        <button onclick="submitProof()">Submit</button>
+        <button onclick="closeVIPPopup()" style="margin-left:10px;">&times;</button>
+        <p id="vip-status" style="margin-top:15px;font-weight:bold;color:#ff0;"></p>
+    </div>
+</div>
+<script>
+let users = JSON.parse(localStorage.getItem('users')||'{}');
+let currentUser = null;
+let LIMIT = 10, PREMIUM_LIMIT = 100, resetTime = 50*60*1000;
+
+// Sidebar toggle
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('show');}
+
+// Sections
+function openSection(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// Register
+function registerUser(){
+  let u = document.getElementById('reg-username').value;
+  let p = document.getElementById('reg-password').value;
+  let n = document.getElementById('reg-name').value;
+  let num = document.getElementById('reg-number').value;
+  if(!u || !p || !n || !num){ alert("Fill all fields"); return; }
+  if(users[u]){ alert("Username exists"); return; }
+  users[u] = {password:p, name:n, number:num, role:'FREE', used:0, time:Date.now(), vipProof:'', admin:false};
+  localStorage.setItem('users', JSON.stringify(users));
+  alert("Registered! Login now.");
+  openSection('home');
+}
+
+// Login
+function login(){
+  let u = document.getElementById('login-username').value;
+  let p = document.getElementById('login-password').value;
+  if(!users[u] || users[u].password !== p){ alert("Invalid credentials"); return; }
+  currentUser = u;
+  document.getElementById('login-card').style.display="none";
+  document.getElementById('stats').style.display="flex";
+  startTimer();
+  updateStats();
+  loadFiles();
+  openSection('android');
+}
+
+// Stats
+function updateStats(){
+  if(!currentUser) return;
+  let udata = users[currentUser];
+  let max = udata.role==='VIP'?PREMIUM_LIMIT:LIMIT;
+  document.getElementById('used').innerText = udata.used;
+  document.getElementById('limit').innerText = max;
+  document.getElementById('status').innerText = udata.role;
+}
+
+// Timer reset
+function startTimer(){
+  if(!currentUser) return;
+  setInterval(()=>{
+    let udata = users[currentUser];
+    let diff = resetTime - (Date.now() - udata.time);
+    if(diff <= 0){
+      udata.used = 0;
+      udata.time = Date.now();
+      users[currentUser] = udata;
+      localStorage.setItem('users', JSON.stringify(users));
+      diff = resetTime;
+    }
+    let m = Math.floor(diff/60000);
+    let s = Math.floor((diff%60000)/1000);
+    document.getElementById('countdown').innerText = `Reset in ${m}m ${s}s`;
+  },1000);
+}
+
+// Config Generator
+function generate(type) {
+    if (!currentUser) { alert("Login first"); return; }
+    let udata = users[currentUser];
+    let max = udata.role === 'VIP' ? PREMIUM_LIMIT : LIMIT;
+    if (udata.used >= max) { alert("Limit reached"); return; }
+    
+    let num = parseInt(document.getElementById(type + '-num').value) || 1;
+    let zip = new JSZip();
+    
+    const PREFIX = ["HEADSHOT", "AIMLOCK", "SNIPER", "QUICKAIM", "RECOIL"];
+    const SUFFIX = ["BOOST", "CONTROL", "ASSIST", "LOCK", "SMOOTH"];
+    const WEAPONS = ["M4", "AK47", "ASM10", "KN44", "DRH", "HVK30", "ICR1"];
+    
+    for (let i = 0; i < num; i++) {
+        let w = WEAPONS[Math.floor(Math.random() * WEAPONS.length)];
+        let name = PREFIX[Math.floor(Math.random() * PREFIX.length)] + "_" + w + "_" + SUFFIX[Math.floor(Math.random() * SUFFIX.length)] + ".json";
+        let data = JSON.stringify({ weapon: w, generated: new Date().toISOString() });
+        zip.file(name, data);
+    }
+    
+    zip.generateAsync({ type: 'base64' }).then(data => {
+        let id = "file_" + Date.now();
+        // Save with creator info
+        localStorage.setItem(id, JSON.stringify({
+            creator: currentUser,
+            data: data
+        }));
+        
+        // Trigger download
+        let a = document.createElement('a');
+        a.href = "data:application/zip;base64," + data;
+        a.download = type + "_configs.zip";
+        a.click();
+        
+        // Update usage stats
+        udata.used += 1;
+        users[currentUser] = udata;
+        localStorage.setItem('users', JSON.stringify(users));
+        
+        // Update UI
+        updateStats();
+        loadFiles();
+        document.getElementById(type + '-log').innerText = "✅ Generated " + type + "_configs.zip";
+    });
+}
+
+// Load files for logged in user only
+function loadFiles() {
+    if (!currentUser) return;
+    let container = document.getElementById('file-list');
+    container.innerHTML = "";
+    
+    for (let k in localStorage) {
+        if (k.startsWith('file_')) {
+            try {
+                let obj = JSON.parse(localStorage.getItem(k));
+                // Only show files created by this user
+                if (obj.creator !== currentUser) continue;
+                
+                let blobURL = "data:application/zip;base64," + obj.data;
+                let div = document.createElement('div');
+                div.className = 'file-item';
+                div.innerHTML = `
+                    <b>${k}</b><br>
+                    <button onclick="downloadFile('${k}')">Download</button>
+                    <button onclick="viewFile('${k}')">View</button>
+                    <button onclick="copyLink('${blobURL}')">Copy Link</button>
+                `;
+                container.appendChild(div);
+            } catch (e) { continue; }
+        }
+    }
+}
+
+// Download
+function downloadFile(id) {
+    let obj = JSON.parse(localStorage.getItem(id));
+    let a = document.createElement('a');
+    a.href = "data:application/zip;base64," + obj.data;
+    a.download = "config.zip";
+    a.click();
+}
+
+// View
+function viewFile(id) {
+    let obj = JSON.parse(localStorage.getItem(id));
+    let w = window.open();
+    w.document.write('<pre>' + atob(obj.data) + '</pre>');
+}
+
+// Copy link
+function copyLink(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        alert("Link copied to clipboard!");
+    }).catch(() => { alert("Failed to copy link."); });
+}
+// VIP Popup
+// VIP Popup updated
+// Show VIP Popup
+function showVIPPopup() {
+    if (!currentUser) { alert("Login first!"); return; }
+    let udata = users[currentUser];
+    document.getElementById('vip-name').innerText = udata.name;
+    document.getElementById('vip-number').innerText = udata.number;
+    document.getElementById('vip-proof').src = "";
+    document.getElementById('vip-upload').value = "";
+    document.getElementById('vip-status').innerText = "";
+    document.getElementById('vip-popup').style.display = 'flex';
+}
+
+// Close VIP Popup
+function closeVIPPopup() {
+    document.getElementById('vip-popup').style.display = 'none';
+}
+
+// Handle file upload preview
+document.getElementById('vip-upload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            document.getElementById('vip-proof').src = evt.target.result;
+            users[currentUser].vipSelectedFile = evt.target.result; // store base64 in user object
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+// Submit VIP Proof
+function submitProof() {
+    if (!currentUser) return;
+    let udata = users[currentUser];
+    if (!udata.vipSelectedFile) { alert("Upload an image first!"); return; }
+    document.getElementById('vip-status').innerText = "⏳ Waiting for approval...";
+    udata.vipStatus = "WAITING_APPROVAL"; // mark as waiting
+    users[currentUser] = udata;
+    localStorage.setItem('users', JSON.stringify(users));
+}
+// Sidebar nav
+document.querySelectorAll('.sidebar a').forEach(a=>{
+    a.onclick=e=>{e.preventDefault(); openSection(a.getAttribute('href').replace('#',''));};
+});
+</script>
+</body>
+</html>
